@@ -1,0 +1,5 @@
+# As a last resort the permission can be set to 777 but the user
+# and UID should match up with the user the solr process runs as
+# in the solr container, generally the UID is what is needed to
+# set correctly in order to allow writing successfully
+/var/lib/solr false solr,8983 0755

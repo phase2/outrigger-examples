@@ -1,0 +1,32 @@
+version: '2.1'
+
+services:
+
+  # Command line for interactive work
+  cli:
+    extends:
+      service: base
+
+  # Installation service, should only need to be run once for
+  install:
+    command: npm install --unsafe-perm
+    extends:
+      service: base
+
+  # Base service definition which is extended by other compose files
+  # and services within this file.
+  #
+  # Other services inherit these settings via the extends property.
+  # See https://docs.docker.com/compose/extends/#extending-services
+  base:
+    image: outrigger/build:php70
+    network_mode: "bridge"
+    entrypoint: [ "/init" ]
+    working_dir: /code
+    command: /bin/bash
+    environment:
+      NODE_VERSION: 6
+    volumes:
+      - ../pattern-lab-starter:/code
+      # allow for persistent npm caching between container runs
+      - ../pattern-lab-starter/.npm:/root/.npm

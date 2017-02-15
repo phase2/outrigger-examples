@@ -1,0 +1,21 @@
+solr:
+  image: solr
+  labels:
+    com.dnsdock.name: "solr"
+    com.dnsdock.image: "outrigger"
+  # For each core you want automatically available add a solr
+  # configuration directory mapped under /opt/solr/server/solr
+  # The configurations should set the data area for their core
+  # to a directory under /var/lib/solr
+  volumes:
+    - ./env/solr/core01:/opt/solr/server/solr/core01
+    - ./env/solr/core02:/opt/solr/server/solr/core02
+  volumes_from:
+    - solr_data
+# This container exists to allow for setting the data area of solr to
+# a persistant storage area and fixing permissions so that the solr
+# container can write to it. This does not need to be done per core
+solr_data:
+  build: ./dockerfiles/solr_data
+  volumes:
+    - /data/solr_example/solr:/var/lib/solr

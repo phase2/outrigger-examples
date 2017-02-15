@@ -1,0 +1,7 @@
+perftest:
+  image: phase2/servicebaselight
+  entrypoint: []
+  working_dir: /code
+  command: /usr/bin/time /code/perf-test.sh
+  volumes:
+    - .:/code

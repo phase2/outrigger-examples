@@ -1,0 +1,16 @@
+{
+  "name": "node4-redis",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "./node_modules/nodemon/bin/nodemon.js server.js -L"
+  },
+  "main": "server.js",
+  "engine": "node 4.x",
+  "dependencies": {
+    "redis": "^2.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.0.15"
+  }
+}

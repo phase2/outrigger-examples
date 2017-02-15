@@ -1,0 +1,19 @@
+# Container for running Jenkins with a local jobs volume
+# Run this image via
+#   - `docker-compose -f jenkins.yml build jenkins`
+#   - `docker-compose -f jenkins.yml run jenkins`
+jenkins:
+  build: .
+  volumes:
+    - ./env/jobs:/var/jenkins_home/jobs
+    - ./env/plugins.txt:/usr/share/jenkins/plugins.txt
+    # Install the commands to make docker work inside the container
+    - /usr/bin/docker:/usr/bin/docker
+    - /usr/bin/docker-compose:/usr/bin/docker-compose
+    # Mount the docker socket so we can execute from within this container
+    - /var/run/docker.sock:/var/run/docker.sock
+    # Volume mount your private key if you need it in the container
+  labels:
+    com.dnsdock.name: "jenkins"
+    com.dnsdock.image: "outrigger"
+

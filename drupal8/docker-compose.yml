@@ -1,0 +1,55 @@
+##
+# Operational services to run the application in your local environment.
+##
+version: '2.1'
+
+services:
+  # Container to run Apache/PHP
+  www:
+    image: phase2/apache-php:php70
+    network_mode: "bridge"
+    container_name: drupal8_www
+    environment:
+      DOCROOT: /var/www/build/html
+      # Change some core container settings
+      PHP_MAX_EXECUTION_TIME: 45
+      # These enable debug/profiling support
+      PHP_XDEBUG: "false"
+      PHP_XHPROF: "false"
+    labels:
+      # The dnsdock labels make this container referenceable by www.d8.vm
+      # It is recommended that your com.dnsdock.name match your container name
+      com.dnsdock.name: "www"
+      com.dnsdock.image: "d8"
+    # Links become entries in /etc/hosts We can refer to the
+    # database host as db instead of db.d8.vm or IP address
+    links:
+      - db
+    # These src:dest pairs get mapped into the container at the
+    # dest path and override what was built into the image. Both
+    # a directory and an individual file can be overridden.
+    #
+    # Relative src paths and absolute ones pointing inside your home
+    # directory will pull in contents from your host machine.
+    #
+    # Paths using /data are persistent and shared within the docker
+    # machine so they should be namespaced (the value of
+    # com.dnsdock.image) was used in this case to create a base of /data/d8
+    volumes:
+      - .:/var/www/
+      - /data/d8/files:/var/www/build/html/sites/default/files
+
+  # Container to run our database
+  db:
+    image: phase2/mariadb
+    network_mode: "bridge"
+    container_name: drupal8_db
+    labels:
+      # The dnsdock labels make this container referenceable by db.d8.vm
+      # It is recommended that your com.dnsdock.name match your container name
+      com.dnsdock.name: "db"
+      com.dnsdock.image: "d8"
+    environment:
+      MYSQL_DATABASE: drupal8_example
+    volumes:
+      - /data/d8/mysql:/var/lib/mysql

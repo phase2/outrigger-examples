@@ -1,0 +1,89 @@
+##
+# Build and command-line operations containers for your local environment.
+##
+version: '2.1'
+
+services:
+  # Container for starting a cli for build commands
+  # Usage: docker-compose -f build.yml run --rm cli
+  cli:
+    extends:
+      service: operational
+
+  # Container for running drush in the docroot.
+  # Usage: docker-compose -f build.yml run --rm drush <command>
+  # Where <command> is a direct drush command like cache-rebuild
+  drush:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "drush", "-r /var/www/build/html" ]
+
+  # Container for running Drupal Console in the docroot.
+  # Usage: docker-compose -f build.yml run --rm drupal <command>
+  # Where <command> is a direct drupal command like generate
+  # Note: Only works if the project includes Drupal Console as a composer dependency.
+  drupal:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "/var/www/vendor/bin/drupal --ansi" ]
+    working_dir: /var/www/build/html
+
+  # Container for running grunt in the docroot.
+  # Usage: docker-compose -f build.yml run --rm grunt <command>
+  grunt:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "grunt" ]
+
+  # Container for composer commands
+  # Usage: docker-compose -f build.yml run --rm composer <command>
+  composer:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "composer" ]
+    command: composer update --prefer-dist
+
+  # Container for composer operations not needing a database
+  # Usage: docker-compose -f build.yml run --rm composer-install
+  composer-install:
+    extends:
+      service: base
+    working_dir: /var/www
+    command: composer install --prefer-dist
+
+  # Operational base service definition for Local environment.
+  #
+  # Unlike `base`, this layer is functional for application interactions.
+  #
+  # Other services inherit these settings via the extends property.
+  # See https://docs.docker.com/compose/extends/#extending-services
+  operational:
+    extends:
+      service: base
+    external_links:
+      - drupal8_db:db
+
+  # Base service definition for Local environment.
+  #
+  # This is not a fully operational build container, lacking access to other
+  # services such as the database or cache needed to properly interact with the
+  # application.
+  #
+  # Uses for this container include filesystem operations. For example:
+  #
+  # docker-compose -f build.yml run --rm base 'rm -Rf node_modules'
+  #
+  # Other services inherit these settings via the extends property.
+  # See https://docs.docker.com/compose/extends/#extending-services
+  base:
+    image: outrigger/build:php70
+    network_mode: "bridge"
+    entrypoint: [ "/init" ]
+    working_dir: /var/www
+    command: /bin/bash
+    volumes:
+      # Primary code mount.
+      - .:/var/www/
+      # Uncomment this if you need to access private repositories, adjust to match your private key file location
+      # ~/.ssh/id_rsa:/root/.ssh/outrigger.key
+

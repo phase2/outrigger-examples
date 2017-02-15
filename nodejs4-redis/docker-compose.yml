@@ -1,0 +1,14 @@
+app:
+  image: phase2/nodejs4
+  labels:
+    com.dnsdock.name: "node"
+    com.dnsdock.image: "outrigger"
+  volumes:
+    - .:/code
+  links:
+    - redis
+redis:
+  image: phase2/redis
+  labels:
+    com.dnsdock.name: "redis"
+    com.dnsdock.image: "outrigger"

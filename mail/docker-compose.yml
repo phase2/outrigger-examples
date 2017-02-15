@@ -1,0 +1,15 @@
+version: '2.1'
+
+services:
+  mail:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    network_mode: "bridge"
+    labels:
+      # The dnsdock labels make this container referenceable by mail.outrigger.vm
+      # It is recommended that your com.dnsdock.name match your container name
+      com.dnsdock.name: "mail"
+      com.dnsdock.image: "outrigger"
+    ports:
+      - "1025"
+      - "8025"

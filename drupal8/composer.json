@@ -1,0 +1,48 @@
+{
+  "name": "outrigger/drupal8-example",
+  "description": "Outrigger Drupal 8 Example Project",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    }
+  ],
+  "require": {
+    "composer/installers": "^1.0.20",
+    "drupal-composer/drupal-scaffold": "^2.0.1",
+    "cweagans/composer-patches": "~1.0",
+    "drupal/lightning": "~2.2.0",
+    "roave/security-advisories": "dev-master"
+  },
+  "require-dev": {
+    "behat/mink": "~1.7",
+    "behat/mink-zombie-driver": "~1.2",
+    "behat/mink-goutte-driver": "~1.2",
+    "drupal/drupal-extension": "~3.0",
+    "jcalderonzumba/gastonjs": "~1.0.2",
+    "jcalderonzumba/mink-phantomjs-driver": "~0.3.1",
+    "mikey179/vfsStream": "~1.2",
+    "drush/drush": "^8",
+    "drupal/console": "~1.0",
+    "phpmd/phpmd": "~2.1",
+    "phpunit/phpunit": "~4.8",
+    "drupal/coder": "^8.2"
+  },
+  "conflict": {
+    "drupal/drupal": "*"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "scripts": {
+    "drupal-scaffold": "DrupalComposer\\DrupalScaffold\\Plugin::scaffold"
+  },
+  "extra": {
+    "installer-paths": {
+      "build/html/core": ["type:drupal-core"],
+      "build/html/modules/contrib/{$name}": ["type:drupal-module"],
+      "build/html/profiles/contrib/{$name}": ["type:drupal-profile"],
+      "build/html/themes/contrib/{$name}": ["type:drupal-theme"],
+      "build/drush/contrib/{$name}": ["type:drupal-drush"]
+    }
+  }
+}
