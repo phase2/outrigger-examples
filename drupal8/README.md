@@ -19,7 +19,7 @@ The --rm portion of the comand ensures that containers are cleaned up after they
 ### 3. Start a new terminal:
 
   - We leave the old terminal running `docker-compose up` so that we can see any log messages from within the containers.
-  - Be sure it has your Dev Tools environment configured. If not run `eval $(devtools config)`
+  - Be sure it has your Outrigger environment configured. If not run `eval "$(rig config)"`
 
 ### 4. Ensure the installer has permissions to create the settings files and files directory with:
 
