@@ -25,6 +25,7 @@ The --rm portion of the comand ensures that containers are cleaned up after they
 
   - `docker-compose exec www cp /var/www/build/html/sites/default/default.settings.php /var/www/build/html/sites/default/settings.php`
   - `docker-compose exec www chown -R apache:apache /var/www/build/html/sites/default`
+  - **NOTE:** You will get a few `Operation not permitted` messages, this is normal.
 
 ### 5. You should be able to load the Drupal 8 installer by navigating to:
 
