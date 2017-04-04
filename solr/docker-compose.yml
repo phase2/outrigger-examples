@@ -1,5 +1,8 @@
 solr:
-  image: solr
+  # Pin Solr to a specific version, because the latest versions
+  # of Solr (>= 6.0.0) are not compatible with the Solr config
+  # in this example.
+  image: solr:5.5
   labels:
     com.dnsdock.name: "solr"
     com.dnsdock.image: "outrigger"
