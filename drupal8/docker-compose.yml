@@ -6,7 +6,7 @@ version: '2.1'
 services:
   # Container to run Apache/PHP
   www:
-    image: phase2/apache-php:php70
+    image: outrigger/apache-php:php70
     network_mode: "bridge"
     container_name: drupal8_www
     environment:
@@ -41,7 +41,7 @@ services:
 
   # Container to run our database
   db:
-    image: phase2/mariadb
+    image: outrigger/mariadb
     network_mode: "bridge"
     container_name: drupal8_db
     labels:
