@@ -1,0 +1,66 @@
+##
+# This is an Outrigger configuration file used by rig project commands.
+##
+
+version: 1.0
+
+# This is not currently used but we include it in anticipation of great things.
+project: drupal8
+
+# Project Scripts
+# These can be run via 'rig project run:<key>'
+# If you specify an alias, you can run 'rig project <alias>'
+scripts:
+
+  setup:
+    alias: setup
+    description: Run the end-to-end repository initialization and site install script.
+    run:
+      - rig project sync:start
+      - docker-compose -f build.yml run --rm composer install --prefer-dist
+
+  up:
+    alias: up
+    description: Start up operational docker containers and filesystem sync.
+    run:
+      - rig project sync:start
+      - docker-compose up
+
+  stop:
+    alias: stop
+    description: Halt operational containers and filesystem sync.
+    run:
+      - docker-compose stop
+      - rig project sync:stop
+
+  run:
+    alias: run
+    description: Run one of the build container services such as 'cli' or 'drush'.
+    run:
+      - docker-compose -f $PWD/build.yml run --rm
+
+  logs:
+    alias: logs
+    description: Stream the logs produced by your Docker project containers. To limit output add '--tail=20'.
+    run:
+      - docker-compose logs -ft
+
+  ps:
+    description: Get a list of all containers associated with this project. Unlike docker-compose ps, this will include all containers even for different configuration files.
+    run:
+      - docker ps -a --filter "label=outrigger.project=drupal8"
+
+  install:
+    alias: install
+    description: Install the Drupal site.
+    run:
+      - docker-compose -f build.yml run --rm drush site-install '-y --site-name="Outrigger Drupal Example" --db-url=mysql://admin:admin@db/drupal8'
+      - docker-compose -f build.yml run --rm drush upwd "admin --password=admin"
+      # Literal block escape needed to avoid colon processed as YAML key.
+      - |
+        echo "Site URL: www.d8.vm\nUsername: admin\nPassword: admin"
+
+# This controls configuration for the `project sync:start` command.
+sync:
+  # This is the name of the external volume to use.
+  volume: drupal8-sync
