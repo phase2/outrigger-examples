@@ -11,9 +11,8 @@ services:
     image: outrigger/build:php71
     network_mode: "bridge"
     entrypoint: [ "/init" ]
-    working_dir: /var/www
+    working_dir: /var/www/html
     command: /bin/bash
-    environment:
     volumes:
       - .:/var/www/html
       - /data/uv/files:/var/www/html/files-in-data

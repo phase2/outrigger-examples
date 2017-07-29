@@ -49,7 +49,9 @@
   <p>
     After your container is started, when viewing this file via NFS the image
     will appear because it has been copied to the uv-sync docker volume by unison
-    and this volume is mounted at the directory files-via-unison.
+    and this volume is mapped to the directory /var/www/html/files-via-unison
+    making it's relative location correct for the index.html file mapped to
+    /var/www/html/index.html.
   </p>
   <p>
     When viewing this file via unison, this reference will be broken because
@@ -68,7 +70,9 @@
     This is an image referenced via src="/files-in-data/sample-image.png". When
     looking at this file locally it will have a blue border. When looking at this
     file via NFS it will be broken until a file with this name is transferred to
-    the /data/uv/files directory in your docker machine.
+    the /data/uv/files directory in your docker machine. It will appear broken
+    until transferred because the volume mapping masks what would have otherwise
+    been visible due to sharing via NFS.
   </p>
 
 </main>
@@ -79,16 +83,16 @@
     const location = document.getElementById('annotate-location');
     var msgLocation = '';
     var span = document.createElement('span');
-    if (window.location.scheme == 'http') {
-        msgLocation = (window.location.pathname.match(/files-via-unison/)) ? "unison" : "nfs";
-        span.innerHTML = 'This version is shared with the container process via:' + msgLocation;
-        location.appendChild(span);
+    if (window.location.protocol === "http:") {
+      msgLocation = (window.location.pathname.match(/files-via-unison/)) ? "unison" : "nfs";
+      span.innerHTML = 'This version is shared with the container process via:' + msgLocation;
+      location.appendChild(span);
     }
   }
 
   function hideNavLocal() {
     var nav, i;
-    if (window.location.scheme != 'http') {
+    if (window.location.protocol !== "http:") {
       nav = document.getElementsByTagName('nav');
       for(i = 0; i < nav.length; ++i) {
         nav[i].remove();
