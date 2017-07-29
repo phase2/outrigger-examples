@@ -1,0 +1,37 @@
+##
+# Operational services to run the application in your local environment.
+#
+# @see https://docs.docker.com/compose/reference/overview/
+# @see https://docs.docker.com/compose/compose-file/compose-file/
+##
+version: '3.2'
+
+services:
+  # Container to run Apache/PHP
+  www:
+    image: outrigger/apache-php:php71
+    container_name: understanding_volumes_www
+    network_mode: "bridge"
+    labels:
+      # The dnsdock labels make this container referenceable by www.uv.vm
+      # It is recommended that your com.dnsdock.name match your container name
+      com.dnsdock.name: "www"
+      # uv as a shorter to type project namespace for understanding-volumes
+      com.dnsdock.image: "uv"
+    # These src:dest pairs get mapped into the container at the
+    # dest path and override what was built into the image. Both
+    # a directory and an individual file can be overridden.
+    #
+    # Relative src paths and absolute ones pointing inside your home
+    # directory will pull in contents from your host machine.
+    #
+    # Paths using /data are persistent and shared within the docker
+    # machine so they should be namespaced (the value of
+    # com.dnsdock.image) was used in this case to create a base of /data/uv
+    volumes:
+      - .:/var/www/html
+      - /data/uv/files:/var/www/html/files-in-data
+      - uv-sync:/var/www/html/files-via-unison
+volumes:
+  uv-sync:
+    external: true

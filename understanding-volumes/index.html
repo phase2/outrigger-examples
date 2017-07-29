@@ -1,0 +1,101 @@
+<html lang="en">
+<head>
+  <title>Understanding Volumes</title>
+  <style type="text/css">
+    nav li {
+      display: inline;
+      list-style-type: none;
+    }
+
+    .sample-image {
+      float: right;
+      border: 1px solid #000;
+      margin: 5px;
+    }
+
+    .clearfix {
+      clear: both;
+    }
+
+    body {
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <ul>
+    <li><a href="/files-via-unison/index.html">Unison</a></li>
+    <li><a href="/index.html">NFS</a></li>
+  </ul>
+</nav>
+
+<main>
+  <p id="annotate-location">
+    You are looking at the file index.html.
+  </p>
+
+
+  <p class="clearfix">
+    <img class="sample-image" src="files-via-unison/sample-image.png"
+         height="250" width="250">
+    This is an image referenced via src="files-via-unison/sample-image.png".
+    When viewing this file locally, this reference will be broken because there
+    is no file in the files-via-unison directory. Also, that directory will not
+    exist until your containers are started. The directory gets created when
+    your container is started as part of tracking the volume mounts.
+  </p>
+  <p>
+    After your container is started, when viewing this file via NFS the image
+    will appear because it has been copied to the uv-sync docker volume by unison
+    and this volume is mounted at the directory files-via-unison.
+  </p>
+  <p>
+    When viewing this file via unison, this reference will be broken because
+    the path is relative.
+  </p>
+  <p class="clearfix">
+    <img class="sample-image" src="sample-image.png" height="250" width="250">
+    This is an image referenced via src="sample-image.png". When viewing this
+    file via NFS you are looking at the image on your host machine. When viewing
+    via Unison you are looking at the copy of it transferred to the docker
+    volume named uv-sync which is mounted at the path /var/www/html/files-via-unison.
+  </p>
+
+  <p class="clearfix">
+    <img class="sample-image" src="files-in-data/sample-image.png" height="250" width="250">
+    This is an image referenced via src="/files-in-data/sample-image.png". When
+    looking at this file locally it will have a blue border. When looking at this
+    file via NFS it will be broken until a file with this name is transferred to
+    the /data/uv/files directory in your docker machine.
+  </p>
+
+</main>
+
+</body>
+<script type="text/javascript">
+  function writeLocation() {
+    const location = document.getElementById('annotate-location');
+    var msgLocation = '';
+    var span = document.createElement('span');
+    if (window.location.scheme == 'http') {
+        msgLocation = (window.location.pathname.match(/files-via-unison/)) ? "unison" : "nfs";
+        span.innerHTML = 'This version is shared with the container process via:' + msgLocation;
+        location.appendChild(span);
+    }
+  }
+
+  function hideNavLocal() {
+    var nav, i;
+    if (window.location.scheme != 'http') {
+      nav = document.getElementsByTagName('nav');
+      for(i = 0; i < nav.length; ++i) {
+        nav[i].remove();
+      }
+    }
+  }
+  writeLocation();
+  hideNavLocal();
+</script>
+</html>

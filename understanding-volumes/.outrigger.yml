@@ -1,0 +1,32 @@
+##
+# This is an Outrigger configuration file used by rig project commands.
+##
+
+version: 1.0
+
+# This is not currently used but we include it in anticipation of great things.
+project: uv
+
+# Project Scripts
+# These can be run via 'rig project run:<key>'
+# If you specify an alias, you can run 'rig project <alias>'
+scripts:
+
+  up:
+    alias: up
+    description: Start up operational docker containers and filesystem sync.
+    run:
+      - rig project sync:start
+      - docker-compose up -d
+
+  stop:
+    alias: stop
+    description: Halt operational containers and filesystem sync.
+    run:
+      - docker-compose stop
+      - rig project sync:stop
+
+# This controls configuration for the `project sync:start` command.
+sync:
+  # This is the name of the external volume to use.
+  volume: uv-sync
