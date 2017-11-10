@@ -8,9 +8,11 @@ version: '3.3'
 
 services:
   # Container to run Apache/PHP
+  # @see https://hub.docker.com/r/outrigger/apache-php
   www:
     image: outrigger/apache-php:php71
     container_name: drupal8_www
+    // Bridge mode allows Outrigger DNS to route requests to the container.
     network_mode: "bridge"
     environment:
       DOCROOT: /var/www/build/html
@@ -42,9 +44,13 @@ services:
     volumes:
       # Main code volume mount.
       - .:/var/www
+      # If you symlink a parent directory of files, be sure to set the destination
+      # to the canonical path. For example, /var/www/src/sites/default/files if
+      # your sites directory is symlinked from /var/www/src/sites.
       - /data/drupal8/files:/var/www/build/html/sites/default/files
 
   # Container to run our database
+  # @see https://hub.docker.com/r/outrigger/mariadb
   db:
     image: outrigger/mariadb:10.1
     container_name: drupal8_db

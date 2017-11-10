@@ -67,19 +67,17 @@ docker-compose -f build.yml run --rm drush site-install --site-name="Outrigger D
 
   - `docker-compose -f build.yml run --rm drush cache-rebuild`
 
-### 3. Running composer commands on the site
+### 2. Running composer commands on the site
 
   - `docker-compose -f build.yml run --rm composer <command>`
 
-### 4. Getting a CLI on the code base (this will open a bash shell)
+### 3. Getting a CLI on the code base (this will open a bash shell)
 
   - `docker-compose -f build.yml run --rm cli`
 
-### 5. Importing a private key into the build container
+### 4. Importing a private key into the build container
 
-When you need to clone data that is in a private repo, you will need to pass your
-SSH private key into the container so that is can be used with git to clone your
-project.  
+When you need to clone data that is in a private repo, you will need to pass your SSH private key into the container so that is can be used with git to clone your project.  
 
 Uncomment the volume in build.yml's base service.
 
