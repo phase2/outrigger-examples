@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   
-  # View at http://ui.swagger.vm:80080
+  # View at http://ui.swagger.vm:8080
   # docker-compose up -d ui
   # For environment variable options, see https://github.com/swagger-api/swagger-ui/blob/master/Dockerfile
   ui:
@@ -19,7 +19,7 @@ services:
       # @TODO port mapping fails.
       - 80:8080
 
-  # View at http://editor.swagger.vm:80080
+  # View at http://editor.swagger.vm:8080
   # docker-compose up -d editor
   editor:
     container_name: swagger_${DOCKER_ENV:-local}_editor
