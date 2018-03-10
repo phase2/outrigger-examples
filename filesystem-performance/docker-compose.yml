@@ -1,7 +1,22 @@
-perftest:
-  image: phase2/servicebaselight
-  entrypoint: []
-  working_dir: /code
-  command: /usr/bin/time /code/perf-test.sh
-  volumes:
-    - .:/code
+version: '3.3'
+
+services:
+  perftest:
+    image: phase2/servicebaselight
+    entrypoint: []
+    working_dir: /code
+    command: /usr/bin/time /code/perf-test.sh
+    volumes:
+      - .:/code
+
+  filesync-perftest:
+    image: phase2/servicebaselight
+    entrypoint: []
+    working_dir: /code
+    command: /usr/bin/time /code/perf-test.sh
+    volumes:
+      - perftest-sync:/code
+
+volumes:
+  perftest-sync:
+    external: true

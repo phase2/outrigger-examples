@@ -1,5 +1,26 @@
+# Test the Performance of Your Docker Filesystem
+
 This helps sanity check the performance of your docker setup.
 
-To use this run `docker-compose run perftest` and look at the
-timing information output. If needed, run `./perf-test.sh` from
-your host and compare timing as well.
+## Basic/NFS-based Filesystem Test
+
+Run the following command and review the timing information output.
+
+```
+docker-compose run --rm perftest
+```
+
+## Outrigger Filesystem Sync Test
+
+Run the following commands and review the timing information output.
+
+```
+rig project sync --dir=.
+docker-compose run --rm filesync-perftest
+```
+
+## Local Filesystem Test
+
+```
+./perf-test.sh
+```
