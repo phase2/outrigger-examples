@@ -6,8 +6,33 @@ Start mailhog with `docker-compose up`
  
 You can also add the `mail` service defined in the `docker-compose.yml` file to your projects compose file.
 
-If you do so, be sure to configure the web server with network access to mailhog, such as by adding
-the mail service to the web containers `links` configuration.
+sure to configure the web server with network 
+
+## Network Access to the Mail Service
+
+Access to mailhog from the web server is enabled by adding the mail service to the web containers `links` configuration.
+If the project has a separate build container, that container will need an external link in order to reach the mail service.
+
+In other "operational" services of your docker-compose.yml
+
+```yaml
+version: '3.4'
+services:
+  web-or-other-service:
+    links:
+      - mail
+```
+
+In a separate build container configuration (build.yml):
+
+```yaml
+version: '3.4'
+services:
+  web-or-other-service:
+    external_links:
+      # For the left-side, use the docker container name instead of the docker-compose service name.
+      - projectname_mail:mail
+```
 
 ## Drupal
 
