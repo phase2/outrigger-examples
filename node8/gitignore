@@ -1,0 +1,21 @@
+# IDE artifacts
+._.DS_store
+.DS_Store
+.idea
+
+# Build artifacts
+/node_modules
+/build
+
+# Debug
+.projectname-sync.log.tmp
+projectname-sync.log
+npm-debug.log
+
+# Tool State
+.eslintcache
+*unison.*
+coverage
+
+# Runtime Config
+env/proxy/ca/

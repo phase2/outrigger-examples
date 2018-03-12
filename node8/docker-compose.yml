@@ -1,0 +1,63 @@
+##
+# Operational services for node-demo-app.
+#
+# Running the app for demos, as a stable backing service to other work, or to
+# view a set of changes to custom code only:
+#
+# ```
+# # You may use --no-cache flag to force an image rebuild.
+# docker-compose -f docker-compose.yml up -d`
+# ```
+#
+# For development purposes where you need to run a WATCH command or
+# CHANGE DEPENDENCIES:
+#
+# ```
+# docker-compose up -d
+# ```
+#
+# @see docker-compose.override.yml for the more comprehensive "dev-mode"
+# configuration.
+##
+version: '3.5'
+
+services:
+
+  # HTTP(s) Proxy
+  # Access at https://proxy.projectname.vm
+  proxy:
+    image: outrigger/https-proxy:1.0
+    container_name: projectname_https_proxy
+    depends_on:
+      - app
+    environment:
+      UPSTREAM: app.projectname.vm:3773
+      PROXY_DOMAIN: proxy.projectname.vm
+    labels:
+      com.dnsdock.name: proxy
+      com.dnsdock.image: projectname
+      outrigger.project: projectname
+    network_mode: bridge
+
+
+  # The Node app.
+  # Access at http://app.projectname.vm:3773
+  app:
+    build: .
+    container_name: projectname_api
+    environment:
+      # Services running in containers should use this to respond to all requests.
+      # Align this environment variable with node application configuration.
+      API_HOST: 0.0.0.0
+      # Arbitrary port for the node service to bind. Align this environment variable
+      # with node application configuration.
+      API_PORT: 3773
+      # Many tools use this environment variable to drive functional behavior,
+      # this includes yarn which will use this as a production mode toggle on which
+      # dependencies to install.
+      NODE_ENV: ${NODE_ENV:-production}
+    labels:
+      com.dnsdock.name: app
+      com.dnsdock.image: projectname
+      outrigger.project: projectname
+    network_mode: bridge

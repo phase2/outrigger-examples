@@ -1,0 +1,32 @@
+version: '3.5'
+
+services:
+
+  proxy:
+    volumes:
+      # Make the root cert available locally to configure local trust.
+      - ./env/proxy/ca:/etc/nginx/ca
+      # Persist the generated cert to the docker-machine to minimize
+      # the need to re-establish trust.
+      - dullahan-ssl-certs:/etc/nginx/certs
+
+  app:
+    # Assumes there's a development mode configured via a package.json "watch"
+    # script. This replaces the "yarn start" run by default.
+    command: ["yarn", "run", "watch"]
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+    # @todo revisit after https://github.com/phase2/rig/issues/135 is resolved.
+    user: root
+    volumes:
+      # Use Outrigger Filesync to maximize performance of build times.
+      # If you have issues with filesync and do not need file watches, please
+      # test the performance by replacing "dullahan-sync" with a period (.:/code)
+      - projectname-sync:/code
+      # Persist tool caches. This covers yarn and npm.
+      - /data/projectname/cache:/usr/local/share/.cache
+
+volumes:
+  projectname-sync:
+    external: true
+  dullahan-ssl-certs:

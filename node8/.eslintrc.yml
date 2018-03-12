@@ -1,0 +1,25 @@
+# @see https://eslint.org/docs/user-guide/configuring#configuration-file-formats
+extends:
+  # Use AirBnB as the base standard. This aligns with other JS practices.
+  - airbnb-base
+plugins:
+  # Activate eslint-plugin-import to check on our import statements.
+  - import
+rules:
+  no-console: 0
+  no-param-reassign: 0
+env:
+  # Enable global variables associated with node.js
+  node: true
+globals:
+  __DEVELOPMENT__: true
+  __VERSION__: true
+overrides:
+  -
+    # Test files are more readable when they allow extra space around describe
+    # and test blocks.
+    files:
+      - src/**/*.test.js
+      - tests/*.test.js
+    rules:
+      padded-blocks: 0
