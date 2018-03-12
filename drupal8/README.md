@@ -77,7 +77,7 @@ docker-compose -f build.yml run --rm drush site-install --site-name="Outrigger D
 
 ### 4. Importing a private key into the build container
 
-When you need to clone data that is in a private repo, you will need to pass your SSH private key into the container so that is can be used with git to clone your project.  
+When you need to clone data that is in a private repo, you will need to pass your SSH private key into the container so that it can be used with git to clone your project.  
 
 Uncomment the volume in build.yml's base service.
 
