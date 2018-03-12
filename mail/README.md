@@ -28,7 +28,7 @@ In a separate build container configuration (build.yml):
 ```yaml
 version: '3.4'
 services:
-  web-or-other-service:
+  operational:
     external_links:
       # For the left-side, use the docker container name instead of the docker-compose service name.
       - projectname_mail:mail
