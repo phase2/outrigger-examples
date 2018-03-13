@@ -104,10 +104,11 @@ services:
       # Unified lookup label for all containers for this project.
       outrigger.project: drupal8
     volumes:
-      # Use 'rig project sync' to leverage unison-based filesystem for app code.
-      # @see <doc-url>
+      # Use 'rig project sync' to leverage Outrigger Filesync for app code.
+      # @see http://docs.outrigger.sh/project-setup/filesystem-sync/
       - drupal8-sync:/var/www
       # Drupal files directory.
+      # This should be identical to the files volume in docker-compose.yml.
       - /data/drupal8/files:/var/www/build/html/sites/default/files
       # Persist the cache directories associated with various tools.
       # The first volume mount covers: npm, composer, bower, fontconfig, & yarn
