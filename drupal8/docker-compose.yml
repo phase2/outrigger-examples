@@ -12,7 +12,7 @@ services:
   www:
     image: outrigger/apache-php:php71
     container_name: drupal8_www
-    // Bridge mode allows Outrigger DNS to route requests to the container.
+    # Bridge mode allows Outrigger DNS to route requests to the container.
     network_mode: "bridge"
     environment:
       DOCROOT: /var/www/build/html
