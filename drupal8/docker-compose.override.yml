@@ -11,7 +11,7 @@
 # @see http://docs.outrigger.sh/project-setup/filesystem-sync/
 #
 # This configuration is automatically applied by default (when you **do not**
-specify the `-f` flag.)
+# specify the `-f` flag.)
 #
 # To skip including this configuration, run 'docker-compose -f docker-compose.yml ...'
 ##
