@@ -1,0 +1,7 @@
+jenkins/jobs/*/builds
+jenkins/jobs/*/lastStable
+jenkins/jobs/*/lastSuccessful
+jenkins/jobs/*/workspace
+jenkins/jobs/*/nextBuildNumber
+jenkins/jobs/*/*.log
+build/etc/drush/cache

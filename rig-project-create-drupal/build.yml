@@ -1,0 +1,160 @@
+##
+# Build and command-line operations containers for your local environment.
+#
+# By setting your local DOCKER_ENV environment variable you can spin up
+# multiple environments. Keep in mind you should also vary the docker-compose
+# --project-name as needed by running commands with that flag, the -p alias,
+# or setting the COMPOSE_PROJECT_NAME environment variable.
+#
+# @see https://docs.docker.com/compose/reference/overview/
+# @see https://docs.docker.com/compose/compose-file/compose-file-v2/
+##
+version: '2.1'
+
+services:
+  # Container for starting a cli for build commands
+  # Usage: docker-compose -f build.yml run --rm cli
+  cli:
+    extends:
+      service: operational
+    command: /bin/bash
+
+  # Container for running composer in the repo root.
+  # Usage: docker-compose -f build.yml run --rm composer <command>
+  composer:
+    extends:
+      service: base
+    entrypoint: [ "/init", "composer", "--ansi" ]
+    command: ""
+
+  # Container for running drush in the docroot.
+  # Usage: docker-compose -f build.yml run --rm drush <command>
+  # Where <command> is a direct drush command like cache-rebuild
+  drush:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "drush", "@projectname" ]
+    working_dir: /var/www/build/html
+
+  # Container for running Drupal Console in the docroot.
+  # Usage: docker-compose -f build.yml run --rm drupal <command>
+  # Where <command> is a direct drupal command like generate
+  # Note: Only works if the project includes Drupal Console as a composer dependency.
+  drupal:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "/var/www/vendor/bin/drupal", "--ansi" ]
+    working_dir: /var/www/build/html
+
+    # Container for running grunt in the repo root.
+  # Usage: docker-compose -f build.yml run --rm grunt <command>
+  grunt:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "grunt" ]
+
+  # Container for running PHPUnit tests.
+  # Usage: docker-compose -f build.yml run --rm phpunit <phpunit parameters>
+  # E.g. docker-compose -f build.yml run --rm phpunit -c ./core/phpunit.xml.dist ./modules/custom
+  phpunit:
+    extends:
+      service: operational
+    entrypoint: [ "/init", "/var/www/vendor/bin/phpunit" ]
+    working_dir: /var/www/build/html
+
+  # Operational base service definition for Local environment.
+  #
+  # Unlike `base`, this layer is functional for application interactions.
+  #
+  # Other services inherit these settings via the extends property.
+  # See https://docs.docker.com/compose/extends/#extending-services
+  operational:
+    extends:
+      service: base
+    external_links:
+      - projectname_${DOCKER_ENV:-local}_db:db
+      - projectname_${DOCKER_ENV:-local}_cache:cache
+    # Unset the bin/bash command used by base and cli.
+    command: ""
+
+  # Base service definition for Local environment.
+  #
+  # This is not a fully operational build container, lacking access to other
+  # services such as the database or cache needed to properly interact with the
+  # application.
+  #
+  # Uses for this container include filesystem operations. For example:
+  #
+  # docker-compose -f build.yml run --rm base 'rm -Rf node_modules'
+  #
+  # Other services inherit these settings via the extends property.
+  # See https://docs.docker.com/compose/extends/#extending-services
+  base:
+    image: outrigger/build:php70
+    network_mode: "bridge"
+    entrypoint: [ "/init" ]
+    working_dir: /var/www
+    command: /bin/bash
+    volumes:
+      # Use 'rig project sync' to leverage unison-based filesystem for app code.
+      # @see <doc-url>
+      - projectname-sync:/var/www
+      # /var/www/src is used here rather than /var/www/build/html to
+      # prevent the grunt clean:default task from encountering an error
+      # because docker won't let the files directory be removed as the
+      # container is using it in its filesystem magic. Since the
+      # /var/www/build/html/sites/default item is a symlink it can be
+      # successfully cleaned without then needing to touch the files
+      # directory. This mount is present so that drush and other build
+      # container operations can operate on the files for a site.
+      - /data/projectname/${DOCKER_ENV:-local}/files:/var/www/src/sites/default/files
+      # By volume mounting project Drush configuration to the user profile the
+      # Docker image can carry Drush configuration and commands itself.
+      # Would be more clean if this volume mount placed the Drush configuration
+      # within the Drupal directory structure.
+      - ./env/build/etc/drush:/root/.drush
+      # Local backups are managed within the project directory. This varies by
+      # platform.
+      - ./build/backups:/opt/backups
+      # Persist the cache directories associated with various tools.
+      # The first volume mount covers: npm, composer, bower, fontconfig, & yarn
+      - /data/projectname/cache:/root/.cache
+      - /data/projectname/cache/drush:/root/.drush/cache
+      - /data/projectname/cache/behat_gherkin:/tmp/behat_gherkin_cache
+      # SSH key grants read access to private Git repositories.
+      - ~/.ssh/${OUTRIGGER_SSH_KEY:-id_rsa}:/root/.ssh/outrigger.key
+      # Preserve BASH history across build container runs.
+      - /data/projectname/${DOCKER_ENV:-local}/bash:/root/bash
+    labels:
+      outrigger.project: projectname
+    environment:
+      APP_DOMAIN: www.projectname.vm
+      GDT_DOMAIN: www.projectname.vm
+      # See https://hub.docker.com/r/outrigger/build for other Node version options.
+      NODE_VERSION: 6
+      
+      # Configure Xdebug
+      # See http://docs.outrigger.sh/common-tasks/using-xdebug-with-phpstorm/
+      PHP_XDEBUG: "true"
+      PHP_IDE_CONFIG: "serverName=app.projectname.vm"
+      # Suppress the loading of grunt-drupal-tasks desktop notification functionality.
+      GDT_QUIET: 1
+      # Include the DOCKER_ENV so Drupal settings can be aware of environment.
+      DOCKER_ENV: ${DOCKER_ENV:-local}
+      # Centralized build cache configuration.
+      # This might move to the Docker build image.
+      NPM_CONFIG_CACHE: /root/.cache/npm
+      COMPOSER_CACHE_DIR: /root/.cache/composer
+      PROXY_VIRTUAL_HOST: www.projectname.vm
+      # PHPUnit variables.
+      SIMPLETEST_DB: mysql://admin:admin@db/projectname_drupal
+      SIMPLETEST_URL: www.projectname.vm
+      BROWSERTEST_OUTPUT_DIRECTORY: /tmp
+      COMPOSER_EXIT_ON_PATCH_FAILURE: 1
+
+volumes:
+  # This defines the filesystem synchronization volume used for application
+  # code by the web container.
+  # @see <doc-url>
+  projectname-sync:
+    external: true
