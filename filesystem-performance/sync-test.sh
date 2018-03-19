@@ -4,22 +4,31 @@ BASE_DIR=generated-files
 BASE_FILE=$(mktemp)
 DIR=0
 DUPE=0
-# make $FILE_LOOP number of files in each of $DIR_LOOPS directories
-DIR_LOOPS=16
+
+# file of 4096 and dupe of 4 - no crash on clean_dupe_dirs first time through but did on clean_dupe_dirs after cleaning by removing numbered directories in clones
+# file of 8196 and dupe of 3 - no crash on clean_dupe_dirs first time through but did on clean_dupe_dirs after cleaning by removing numbered directories in clones
 FILE_LOOPS=8192
+# Total files created will be DIR_LOOPS * FILE_LOOPS. $FILE_LOOPS number of files in each of $DIR_LOOPS directories
+DIR_LOOPS=16
 DUPE_LOOPS=4
-# Make the generated files of BLOCK_SIZE * BLOCK_COUNT byte size
-BLOCK_SIZE=512
-BLOCK_COUNT=16
 # How long to sleep between some operations
 SLEEP=1
 
+
+cleanup_and_exit() {
+  rig project sync:stop
+  docker volume rm perftest-sync
+  rm -rf $BASE_DIR-*
+  rm -rf $BASE_DIR
+  rm $BASE_FILE
+  exit
+}
 
 check_process() {
   RESULTS=$(ps aux | grep unison | grep perftest-sync)
   if [ $? -ne 0 ]; then
     echo "Local unison process seems to have crashed"
-    exit
+    cleanup_and_exit
   fi
 }
 
@@ -41,14 +50,14 @@ docker volume rm perftest-sync
 rig project sync --dir=.
 
 echo ""
-dd if=/dev/urandom of=$BASE_FILE bs=$BLOCK_SIZE count=$BLOCK_COUNT 2>/dev/null
+touch $BASE_FILE
 
-echo "Making $(expr $FILE_LOOPS \* $DIR_LOOPS) files of size $(expr $BLOCK_SIZE \* $BLOCK_COUNT) bytes across $DIR_LOOPS directories"
+echo "Making $(expr $FILE_LOOPS \* $DIR_LOOPS) files across $DIR_LOOPS directories"
 while [ $DIR -lt $DIR_LOOPS ]; do
   FILE=0
   mkdir -p $BASE_DIR/$DIR
   while [ $FILE -lt $FILE_LOOPS ]; do
-    cp $BASE_FILE $BASE_DIR/$DIR/$FILE.bin
+    touch $BASE_DIR/$DIR/$FILE.txt
     FILE=$(expr $FILE + 1)
   done
   echo "Done generating directory $DIR"
@@ -130,5 +139,4 @@ while [ $DUPE -lt $DUPE_LOOPS ]; do
 done
 
 clean_dupe_dirs
-rm -rf $BASE_DIR
-rm $BASE_FILE
+cleanup_and_exit
