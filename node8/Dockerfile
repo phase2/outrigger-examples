@@ -1,8 +1,5 @@
-# --- Baseline Image ---
-FROM outrigger/node:8 AS base
-
 # --- Dependencies ---
-FROM base AS dependencies
+FROM outrigger/node:8 AS dependencies
 
 # Set the working directory.
 WORKDIR /code
@@ -18,12 +15,14 @@ RUN mkdir -p /usr/local/share/.cache && \
 COPY ./package*.json ./.yarnrc ./yarn* ./
 
 # Install dependencies and wipe the cache.
-# Prefer install will seek dependencies from the offline mirror, which will
+# --prefer-offline will seek dependencies from the offline mirror, which will
 # need to be committed in development, not as part of a docker image build.
 RUN yarn install --prefer-offline && yarn cache clean
 
 # For npm, remove the above COPY and RUN steps and instead use:
 # COPY ./package.json ./package* ./npm* ./.npm* /code/
+# @TODO switch to npm ci when the official node image ships npm >= v5.7.1 and
+# outrigger/node:8 is updated.
 # RUN npm install
 
 # --- Custom Code Build ---
@@ -37,9 +36,22 @@ WORKDIR /code
 COPY . /code
 
 # If we have further build steps such as web asset management, insert that here.
-#
+# ENV NODE_ENV=production
 # COPY --from=dependencies /code/node_modules /code
 # RUN yarn run build && rm -Rf node_modules && rm -Rf .yarn-offline-mirror
+
+# Strip the development dependencies now that build is complete.
+RUN yarn install --ignore-scripts --offline && \
+    yarn cache clean && \
+    rm -Rf ./.yarn-offline-mirror
+# If using npm, instead run the following:
+# RUN npm prune
+
+# Explicitly setting the user to root is necessary to modify permissions on /code.
+# We arrange ownership by node in this intermediate container so it copies into
+# the release image as a single layer.
+USER root
+RUN chown -R node:node /code
 
 # --- Final Release ---
 FROM outrigger/node:8 AS release
@@ -51,27 +63,20 @@ LABEL maintainer="Phase2 <outrigger@phase2technology.com>" \
   org.label-schema.name="Project Name" \
   org.label-schema.description="Outrigger-based Node service example." \
   org.label-schema.vcs-url="https://github.com/phase2/outrigger-example" \
-  org.label-schema.docker.cmd="docker run --rm -it yourorg/projectname /bin/bash"
+  org.label-schema.docker.cmd="docker run --rm -it yourorg/projectname /bin/bash" \
   org.label-schema.schema-version="1.0"
 
 # Build with NODE_ENV=development to include dev dependencies.
 ENV NODE_ENV=production \
     # These are injected by runtime. The Docker image carries good defaults.
-    API_HOST=app.projectname.vm \
-    API_PORT=3773
+    APP_HOST=app.projectname.vm \
+    APP_PORT=3773
 
 # Set the working directory.
 WORKDIR /code
 
 # Expose our service port. This should be updated to match the configured port.
 EXPOSE 3773
-
-# The start command should match the configured start script in package.json.
-# By directly calling node here, the number of processes running inside the
-# container is reduced and our service will directly receive process signals.
-#
-# To use the image another way run the container with an explicit command.
-CMD ["node", "./index.js"]
 
 # Retrieve all assets from earlier build stages.
 COPY --from=build /code .
@@ -83,13 +88,14 @@ COPY --from=dependencies /code/.yarn-offline-mirror .yarn-offline-mirror
 # Re-run the yarn install, if in production mode this will exclude devDependencies.
 # The offline flag means the complete status of the offline mirror is required.
 RUN mkdir -p /usr/local/share/.cache && \
-    # Replace the next 4 lines with npm install to strip the dev dependencies.
-    yarn install --ignore-scripts --offline && \
-    yarn cache clean && \
-    # Keep the offline mirror committed to the codebase, but it is not needed in the image.
-    rm -Rf ./.yarn-offline-mirror && \
-    chown -R node:node /code && \
     chown -R node:node /usr/local/share/.cache
 
 # Set a non-root user. This user is created upstream but not set for use.
 USER node
+
+# The start command should match the configured start script in package.json.
+# By directly calling node here, the number of processes running inside the
+# container is reduced and our service will directly receive process signals.
+#
+# To use the image another way run the container with an explicit command.
+CMD ["node", "./index.js"]

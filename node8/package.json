@@ -19,13 +19,13 @@
     "lint": "eslint index.js src/** --cache"
   },
   "dependencies": {
-    "config": "^1.29.0",
+    "config": "^1.29.0"
   },
   "devDependencies": {
     "eslint": "^4.15.0",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-import": "^2.8.0",
-    "nodemon": "^1.14.7",
+    "nodemon": "^1.14.7"
   },
   "nodemonConfig": {
     "verbose": true,

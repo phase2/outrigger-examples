@@ -2,6 +2,7 @@ version: '3.5'
 
 services:
 
+  # Overrides proxy configuration to persist credentials for ongoing development.
   proxy:
     volumes:
       # Make the root cert available locally to configure local trust.
@@ -10,6 +11,7 @@ services:
       # the need to re-establish trust.
       - dullahan-ssl-certs:/etc/nginx/certs
 
+  # Overrides app configuration to enable "developer mode".
   app:
     # Assumes there's a development mode configured via a package.json "watch"
     # script. This replaces the "yarn start" run by default.
@@ -17,6 +19,8 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
     # @todo revisit after https://github.com/phase2/rig/issues/135 is resolved.
+    # Override the container's "production mode" to run as root.
+    # This allows writing to the codebase inside the container.
     user: root
     volumes:
       # Use Outrigger Filesync to maximize performance of build times.
