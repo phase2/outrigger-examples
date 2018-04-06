@@ -9,7 +9,7 @@ services:
       - ./env/proxy/ca:/etc/nginx/ca
       # Persist the generated cert to the docker-machine to minimize
       # the need to re-establish trust.
-      - dullahan-ssl-certs:/etc/nginx/certs
+      - projectname-ssl-certs:/etc/nginx/certs
 
   # Overrides app configuration to enable "developer mode".
   app:
@@ -25,7 +25,7 @@ services:
     volumes:
       # Use Outrigger Filesync to maximize performance of build times.
       # If you have issues with filesync and do not need file watches, please
-      # test the performance by replacing "dullahan-sync" with a period (.:/code)
+      # test the performance by replacing "projectname-sync" with a period (.:/code)
       - projectname-sync:/code
       # Persist tool caches. This covers yarn and npm.
       - /data/projectname/cache:/usr/local/share/.cache
@@ -33,4 +33,4 @@ services:
 volumes:
   projectname-sync:
     external: true
-  dullahan-ssl-certs:
+  projectname-ssl-certs:

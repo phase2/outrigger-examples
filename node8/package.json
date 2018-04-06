@@ -4,7 +4,7 @@
   "description": "An example of a node app dependency manifest.",
   "main": "index.js",
   "repository": {
-    "url": "https://bitbucket.org/phase2tech/node-dullahan",
+    "url": "https://bitbucket.org/phase2tech/projectname",
     "type": "git"
   },
   "engines": {
