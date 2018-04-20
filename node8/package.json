@@ -1,0 +1,36 @@
+{
+  "name": "outrigger-node8-example",
+  "version": "0.1.0",
+  "description": "An example of a node app dependency manifest.",
+  "main": "index.js",
+  "repository": {
+    "url": "https://bitbucket.org/phase2tech/projectname",
+    "type": "git"
+  },
+  "engines": {
+    "node": "8.x",
+    "yarn": "1.x"
+  },
+  "keywords": ["node", "outrigger", "docker", "example"],
+  "license": "MIT",
+  "scripts": {
+    "start": "node ./index.js",
+    "watch": "nodemon ./index.js --exec 'yarn run lint && node'",
+    "lint": "eslint index.js src/** --cache"
+  },
+  "dependencies": {
+    "config": "^1.29.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.15.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "nodemon": "^1.14.7"
+  },
+  "nodemonConfig": {
+    "verbose": true,
+    "exec": "npm run lint && node",
+    "ext": "js,json,yml",
+    "ignore": ["docs/*", ".vscode/*", "env/*"]
+  }
+}

@@ -1,0 +1,28 @@
+# Exclude locally built dependencies when copying files into image.
+# node_modules from the local system are added to the container by volume mount.
+node_modules
+
+# Exclude tool state & temporary reporting artifacts.
+coverage
+*.log
+*.tmp
+.eslintcache
+*unison.*
+
+# Exclude IDE support files
+.vscode
+
+# Exclude version control
+.git*
+
+# Exclude Local Artifacts
+._.DS_store
+.DS_Store
+.idea
+._.*
+
+# Exclude non-operational files
+docs
+docker-compose.*.yml
+.dockerignore
+Dockerfile
