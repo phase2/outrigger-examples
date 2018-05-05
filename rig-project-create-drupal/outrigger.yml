@@ -1,0 +1,130 @@
+##
+# This is an Outrigger configuration file used by rig project commands.
+##
+
+version: 1.0
+
+# This is prepended to the $PATH for any commands referenced in the scripts section.
+bin: ./bin:./node_modules/.bin:./vendor/bin
+
+# This is not currently used but we include it in anticipation of great things.
+project: projectname
+
+# Project Scripts
+# These can be run via 'rig project run:<key>'
+# If you specify an alias, you can run 'rig project <alias>'
+scripts:
+
+  run:
+    alias: run
+    description: Run one of the build container services such as 'cli' or 'drush'.
+    run:
+      - docker-compose -f build.yml run --rm
+
+  up:
+    alias: up
+    description: Start up operational docker containers and filesystem sync.
+    run:
+      - rig project sync:start
+      - docker-compose up -d
+
+  stop:
+    alias: stop
+    description: Halt operational containers and filesystem sync.
+    run:
+      - docker-compose stop
+      - rig project sync:stop
+
+  build:
+    alias: build
+    description: Run the end-to-end build process.
+    run:
+      # COMPOSE_FILE is an environment variable provided by docker-compose.
+      # It is an alternative to the -f flag which selects config files.
+      # We use different docker-compose configurations for Linux than for macOS
+      # or Windows, because Linux can run Docker natively while others need
+      # a Virtual Machine.
+      #
+      # Environment variables set in configured scripts this way only last
+      # until the end of the script execution.
+      #
+      # See https://docs.docker.com/compose/reference/envvars/#compose_file
+      # See https://docs.docker.com/compose/reference/overview/#use--f-to-specify-name-and-path-of-one-or-more-compose-files
+      - export COMPOSE_FILE=build.yml
+      - docker-compose run --rm cli "NPM_CONFIG_LOGLEVEL=error npm install"
+      - docker-compose run --rm grunt --timer
+
+  install:
+    alias: install
+    description: Install the Drupal site.
+    run:
+      - echo "'grunt install' is defined as a grunt task."
+      - echo "Drop the --no-db-load to auto-load build/backups/latest.sql.gz if present."
+      - export COMPOSE_FILE=build.yml
+      - docker-compose run --rm grunt install --no-db-load
+      - echo "Visit $(docker-compose run --rm drush sa @projectname --format=list --fields=uri)"
+
+  update:
+    description: Update the Drupal database to match current code.
+    run:
+      - echo "'grunt update' is defined in Gruntconfig.json\n"
+      - export COMPOSE_FILE=build.yml
+      - docker-compose run --rm grunt update
+      - echo "Visit $(docker-compose run --rm drush sa @projectname --format=list --fields=uri)"
+
+  theme:
+    alias: theme
+    description: Compile all theme assets, activate watch, and start up pattern-lab.
+    run:
+      - docker-compose -f build.yml run --rm theme
+
+  fix-permissions:
+    alias: fix-perms
+    description: Fix permissions for Apache to run code and access files. (Automatically run as part of rig project install.)
+    run:
+      - docker-compose exec www /var/www/bin/fix-perms.sh
+      # grunt cache-clear is defined in Gruntconfig.json as an abstraction over drush cc all and drush cr
+      - docker-compose -f build.yml run --rm grunt cache-clear
+
+  ps:
+    description: Get a list of all containers associated with this project. Unlike docker-compose ps, this will include all containers even for different configuration files.
+    run:
+      - docker ps -a --filter "label=outrigger.project=projectname"
+
+  all-stop:
+    description: Halt all containers associated with this project.
+    run:
+      - rig project run:ps -- -q | xargs docker stop
+
+  logs:
+    alias: logs
+    description: Stream the logs produced by your Docker project containers. To limit output add '--tail=20'.
+    run:
+      - docker-compose logs -ft
+
+  setup:
+    alias: setup
+    description: Run the end-to-end repository initialization and site install script.
+    run:
+      - rig project run:welcome
+      - echo "Continuing with 'rig project setup'..."
+      - rig project up
+      - rig project build
+      - rig project install
+      - rig project run "grunt seed-users"
+      - echo "Congratulations, your new projectname instance is fully set up."
+      - echo "From now on, use 'rig project up' to start your work sessions."
+
+  welcome:
+    alias: tour
+    description: Codebase orientation.
+    run:
+      - echo 'Welcome to the Project!'
+      - echo 'Please review the README.md, CONTRIBUTING.md, TODOS.md, and the docs/ folder.'
+      - echo 'All custom code is under src/'
+      - echo 'To get started, run "rig project setup"'
+
+# This controls configuration for the `project sync:start` command.
+sync:
+  # This is the name of the external volume to use.
+  volume: projectname-sync

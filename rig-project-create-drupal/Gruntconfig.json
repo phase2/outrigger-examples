@@ -1,0 +1,58 @@
+{
+  "srcPaths": {
+    "drupal": "src"
+  },
+  "domain": "www.projectname.vm",
+  "packages": {
+    "srcFiles": [
+      "!sites/*/files/**",
+      "!xmlrpc.php",
+      "!modules/php/*"
+    ],
+    "projFiles": [
+      "README*",
+      "bin/**",
+      "hooks/**",
+      "src/*.make",
+      "vendor/**",
+      "composer.*"
+    ],
+    "dest": {
+      "docroot": "build/html",
+      "devResources": ""
+    }
+  },
+  "phpcs": {
+    "path": "vendor/bin/phpcs"
+  },
+  "phpmd": {
+    "path": "vendor/bin/phpmd"
+  },
+  "drush": {
+    "cmd": "vendor/bin/drush"
+  },
+  "behat": {
+    "flags": "--tags ~@wip"
+  },
+  "eslint": true,
+  "scripts": {
+    "update": "<%= config.drush.cmd %> <%= config.alias %> features-revert-all -yv",
+    "pre-install": "bash bin/pre-install.sh",
+    "post-install": "bash bin/post-install.sh",
+    "cache-clear": "<%= config.drush.cmd %> <%= config.alias %> cache-rebuild",
+    "seed-users": "bash bin/seed-users.sh"
+  },
+  "project": {
+    "profile": "lightning",
+    "db": "/opt/backups/latest.sql.gz",
+    "backups": {
+      "url": "http://backups.hosting.example.net/projectname",
+      "env": "int"
+    }
+  },
+  "generated": {
+    "name": "generator-gadget",
+    "version": "1.2.0"
+  },
+  "alias": "@projectname"
+}

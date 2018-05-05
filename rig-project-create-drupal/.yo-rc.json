@@ -1,0 +1,32 @@
+{
+  "generator-outrigger-drupal": {
+    "skipWelcome": true,
+    "skipGoodbye": true,
+    "insight": false,
+    "skipInstall": true,
+    "skip-install": true,
+    "namespace": "outrigger-drupal:app",
+    "_": [],
+    "skip-cache": false,
+    "projectName": "projectname",
+    "projectDescription": "Demo of 'rig project create' output with most features enabled.",
+    "drupalDistro": "octane",
+    "drupalDistroVersion": "8.x",
+    "hosting": "outrigger",
+    "webserver": "apache",
+    "cacheInternal": "redis",
+    "proxyCache": "varnish",
+    "mail": "mailhog",
+    "domain": "projectname",
+    "gitRepoUrl": "git@bitbucket.org:phase2tech/projectname.git",
+    "useCloud": true,
+    "cloudHost": "hosting.example.net",
+    "environments": [
+      "dev",
+      "qa",
+      "review"
+    ],
+    "flowdockApiKey": "",
+    "usePLS": false
+  }
+}

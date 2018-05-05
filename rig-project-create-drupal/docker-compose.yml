@@ -1,0 +1,114 @@
+##
+# Operational services to run the application in your local or Outrigger Cloud environment.
+#
+# To ensure this works as expected for multiple environments, both environment
+# settings must be carefully respected in *every* command invocation:
+#
+# * The `DOCKER_ENV` environment variable which is used as a template parameter for
+#   how this configuration is used.
+# * The -p|--project-name option for Docker Compose, which uses the provided name
+#   in lieu of deriving key Docker namespacing from whatever the current directory
+#   happens to be named. You can also set the COMPOSE_PROJECT_NAME environment variable.
+#
+# Warning: Multiple environments for local use require customizing the DNSDock
+# Configuration. A generic approach for this has not yet been determined.
+#
+# @see https://docs.docker.com/compose/reference/overview/
+# @see https://docs.docker.com/compose/compose-file/compose-file/
+##
+version: '3.1'
+
+services:
+  # Database service
+  db:
+    container_name: projectname_${DOCKER_ENV:-local}_db
+    image: outrigger/mariadb:10.1
+    environment:
+      MYSQL_DATABASE: projectname_drupal
+      # This is used by the nginx-proxy service which is part of Phase2's Outrigger hosting platform.
+      # Outrigger Cloud as a hosting platform is still for Phase2 internal use only.
+      # Add a VIRTUAL_PORT to access the service externally over port 80.
+      VIRTUAL_HOST: db-${DOCKER_ENV:-local}-projectname.hosting.example.net
+    volumes:
+      - /data/projectname/${DOCKER_ENV:-local}/mysql:/var/lib/mysql
+    network_mode: "bridge"
+    labels:
+      com.dnsdock.name: db
+      com.dnsdock.image: projectname
+      outrigger.project: projectname
+  
+  # Application Cache service
+  cache:
+    container_name: projectname_${DOCKER_ENV:-local}_cache
+    image: outrigger/redis
+    network_mode: "bridge"
+    environment:
+      # This is used by the nginx-proxy service which is part of Phase2's Outrigger hosting platform.
+      # Outrigger Cloud as a hosting platform is still for Phase2 internal use only.
+      # Add a VIRTUAL_PORT to access the service externally over port 80.
+      VIRTUAL_HOST: cache-${DOCKER_ENV:-local}-projectname.hosting.example.net
+    labels:
+      com.dnsdock.name: cache
+      com.dnsdock.image: projectname
+      outrigger.project: projectname
+  
+  # Reverse-proxy Cache service
+  proxy:
+    container_name: projectname_${DOCKER_ENV:-local}_proxy
+    image: outrigger/varnish:4.0
+    network_mode: "bridge"
+    environment:
+      VARNISH_BACKEND_HOST: www
+      # This is used by the nginx-proxy service which is part of Phase2's Outrigger hosting platform.
+      # Outrigger Cloud as a hosting platform is still for Phase2 internal use only.
+      VIRTUAL_HOST: ${DOCKER_ENV:-local}-projectname.hosting.example.net
+    links:
+      - www
+    labels:
+      com.dnsdock.name: www
+      com.dnsdock.image: projectname
+      outrigger.project: projectname
+  
+  # MailHog SMTP and UI service.
+  mail:
+    container_name: projectname_${DOCKER_ENV:-local}_mail
+    image: mailhog/mailhog
+    network_mode: "bridge"
+    labels:
+      com.dnsdock.name: mail
+      com.dnsdock.image: projectname
+      outrigger.project: projectname
+    environment:
+      # This is used by the nginx-proxy service which is part of Phase2's Outrigger Cloud hosting.
+      # Outrigger Cloud as a hosting platform is still for Phase2 internal use only.
+      VIRTUAL_HOST: mail-${DOCKER_ENV:-local}-projectname.hosting.example.net
+      VIRTUAL_PORT: '8025'
+  
+  # Main Application service.
+  www:
+    container_name: projectname_${DOCKER_ENV:-local}_www
+    image: outrigger/apache-php:php70
+    network_mode: "bridge"
+    environment:
+      DOCROOT: /var/www/build/html
+      PHP_MAX_EXECUTION_TIME: 60
+      PHP_XDEBUG: "true"
+      PHP_XHPROF: "true"
+      # Include the DOCKER_ENV so Drupal settings can be aware of environment.
+      DOCKER_ENV: ${DOCKER_ENV:-local}
+      # This is used by the nginx-proxy service which is part of Phase2's Outrigger Cloud hosting.
+      # Outrigger Cloud as a hosting platform is still for Phase2 internal use only.
+      VIRTUAL_HOST: app-${DOCKER_ENV:-local}-projectname.hosting.example.net
+    links:
+      - db
+      - cache
+      - mail
+    volumes:
+      # Main code volume mount.
+      - .:/var/www
+      # /var/www/src is used for consistency with the build container.
+      - /data/projectname/${DOCKER_ENV:-local}/files:/var/www/src/sites/default/files
+    labels:
+      com.dnsdock.name: app
+      com.dnsdock.image: projectname
+      outrigger.project: projectname

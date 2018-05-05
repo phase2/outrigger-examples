@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Perform nightly maintenance and checks against the develop branch. This includes clean database generation and module update checks.</description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>5</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>GIT_REF</name>
+          <description>Git branch, tag, or commit revision to build.</description>
+          <defaultValue>develop</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@3.0.1">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>git@bitbucket.org:phase2tech/projectname.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>${GIT_REF}</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers>
+    <hudson.triggers.TimerTrigger>
+      <spec>H 8 * * *</spec>
+    </hudson.triggers.TimerTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env bash
+export DOCKER_ENV=int
+export COMPOSE_PROJECT_NAME=projectname_${DOCKER_ENV:--local}
+export COMPOSE_FILE=build.devcloud.yml
+
+# Break down the Docker environment and remove generated files.
+teardown() {
+  docker-compose -f docker-compose.yml stop || true
+  docker-compose -f docker-compose.yml rm -f || true
+  # Now that www container is stopped it's safe to clean up.
+  # dev-support does this for the cleanest possible checkup.
+  # git clean -fd
+}
+
+# Handler for errors or other interruptions.
+cancel() {
+  echo &quot;$JOB_NAME: Error: Line $1: $2&quot;
+  # Since CI runs teardown on exit it is not needed here.
+  # teardown
+  exit 34
+}
+
+# End-of-job cleanup.
+complete() {
+  ret=$1
+  [ &quot;$ret&quot; -eq 0 ] || echo >&amp;2 &quot;$JOB_NAME: aborted ($ret)&quot;
+  teardown
+}
+
+# Abort build step on errors.
+trap &apos;cancel $LINENO $BASH_COMMAND&apos; ERR SIGINT SIGTERM SIGQUIT SIGHUP
+# Clean up on program termination.
+trap &apos;complete $?&apos; EXIT
+
+teardown
+
+# Set up and install site
+docker-compose -f docker-compose.yml up -d
+docker-compose run --rm cli "NPM_CONFIG_LOGLEVEL=error npm install"
+docker-compose run --rm grunt --timer
+
+# Remove --no-db-load if each deploy should re-load a database from /opt/backups/latest.sql.gz.
+# The location and name of this file can be changed in Gruntconfig.json.
+docker-compose run --rm grunt install --no-db-load
+
+# Run cron for maximized database freshness.
+docker-compose run --rm drush cron
+
+# Export database. This process preserves the latest 5 databases.
+DATE=$(date +%Y-%m-%d_%H:%M:%S)
+docker-compose run --rm cli bin/db-export.sh nightlies/$DATE.sql
+
+# Run Behat Tests
+# Highly recommended, but not always used on projects.
+# docker-compose run --rm cli sh -c &quot;GDT_DOMAIN=${DOCKER_ENV}-projectname.hosting.example.net grunt test --force --timer&quot;
+
+# Perform a scan for module updates.
+docker-compose run --rm cli bash bin/update-scanner.sh
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers>
+    <hudson.plugins.ansicolor.AnsiColorBuildWrapper plugin="ansicolor@0.4.3">
+      <colorMapName>xterm</colorMapName>
+    </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
+    <org.jenkinsci.plugins.buildnamesetter.BuildNameSetter plugin="build-name-setter@1.6.5">
+      <template>#${BUILD_NUMBER} - ${GIT_BRANCH}</template>
+    </org.jenkinsci.plugins.buildnamesetter.BuildNameSetter>
+  </buildWrappers>
+</project>

@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Stop the &apos;qa-projectname.hosting.example.net&apos; environment. This job is managed in the project code repository, changes made via UI will be lost.</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <customWorkspace>/opt/development/projectname/jenkins/env/workspace/deploy-qa</customWorkspace>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/usr/bin/env bash
+export DOCKER_ENV=qa
+export COMPOSE_PROJECT_NAME=projectname_${DOCKER_ENV:--local}
+export COMPOSE_FILE=build.devcloud.yml
+export SITE_DOMAIN=${DOCKER_ENV}-projectname.hosting.example.net
+
+# Break down the Docker environment
+teardown() {
+  docker-compose -f docker-compose.yml stop
+  docker-compose -f docker-compose.yml rm -f
+}
+
+# Handler for errors or other interruptions.
+cancel() {
+  echo &quot;$JOB_NAME: Error: Line $1: $2&quot;
+  exit 32
+}
+
+# End-of-job cleanup.
+complete() {
+  ret=$1
+  [ &quot;$ret&quot; -eq 0 ] || echo &gt;&amp;2 &quot;$JOB_NAME: aborted ($ret)&quot;
+}
+
+# Abort build step on errors.
+trap &apos;cancel $LINENO $BASH_COMMAND&apos; ERR SIGINT SIGTERM SIGQUIT SIGHUP
+# Clean up on program termination.
+trap &apos;complete $?&apos; EXIT
+
+teardown
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+      </publishers>
+  <buildWrappers>
+    <hudson.plugins.ansicolor.AnsiColorBuildWrapper plugin="ansicolor@0.4.3">
+      <colorMapName>xterm</colorMapName>
+    </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
+  </buildWrappers>
+</project>

@@ -1,0 +1,20 @@
+{
+  "name": "projectname",
+  "description": "Demo of 'rig project create' output with most features enabled.",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=0.12.0",
+    "npm": "2.x"
+  },
+  "private": true,
+  "scripts": {
+    "start": "grunt --timer",
+    "stop": "grunt clean:default",
+    "test": "grunt validate && grunt test"
+  },
+  "dependencies": {
+    "grunt": "^1.0.0",
+    "grunt-drupal-tasks": "~1.0.0",
+    "zombie": "^2.5.1"
+  }
+}
