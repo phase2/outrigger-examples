@@ -1,8 +1,7 @@
 solr:
-  # Pin Solr to a specific version, because the latest versions
-  # of Solr (>= 6.0.0) are not compatible with the Solr config
-  # in this example.
-  image: solr:5.5
+  build: env/docker/solr
+  ports:
+    - "8983:8983"
   labels:
     com.dnsdock.name: "solr"
     com.dnsdock.image: "outrigger"
@@ -13,12 +12,4 @@ solr:
   volumes:
     - ./env/solr/core01:/opt/solr/server/solr/core01
     - ./env/solr/core02:/opt/solr/server/solr/core02
-  volumes_from:
-    - solr_data
-# This container exists to allow for setting the data area of solr to
-# a persistant storage area and fixing permissions so that the solr
-# container can write to it. This does not need to be done per core
-solr_data:
-  build: ./dockerfiles/solr_data
-  volumes:
-    - /data/solr_example/solr:/var/lib/solr
+    - /data/outrigger/solr:/var/lib/solr
